@@ -1,5 +1,6 @@
 package life.majiang.community.community.service;
 
+import life.majiang.community.community.dto.PaginationDTO;
 import life.majiang.community.community.dto.QuestionDTO;
 import life.majiang.community.community.mapper.QestionMapper;
 import life.majiang.community.community.mapper.UserMapper;
@@ -17,8 +18,20 @@ public class QuestionService {
     private QestionMapper qestionMapper;
     @Autowired
     private UserMapper userMapper;
-    public List<QuestionDTO> list() {
-        List<Question> questions = qestionMapper.list();
+    public PaginationDTO list(Integer page, Integer size) {
+
+        PaginationDTO paginationDTO = new PaginationDTO();
+        Integer totalCount = qestionMapper.count();
+        paginationDTO.setPagination(totalCount,page,size);
+        if (page<1){
+            page = 1;
+        }
+        if (page>paginationDTO.getTotalPage()){
+            page = paginationDTO.getTotalPage();
+        }
+        //size*(page-1)
+        Integer offset = size * (page - 1);
+        List<Question> questions = qestionMapper.list(offset,size);
         List<QuestionDTO> questionDTOList = new ArrayList<>();
         for (Question question : questions) {
             User user = userMapper.findById(question.getCreator());
@@ -27,6 +40,8 @@ public class QuestionService {
             questionDTO.setUser(user);
             questionDTOList.add(questionDTO);
         }
-        return questionDTOList;
+        paginationDTO.setQuestions(questionDTOList);
+
+        return paginationDTO;
     }
 }
